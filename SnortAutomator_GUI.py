@@ -37,7 +37,6 @@ def baseline_options():
     pop_frame.pack()
     instrc = tk.Label(pop_frame, text='Enter the IP address that are vaild on your network')
     instrc.place(relx = .05, rely= .1, relheight=.04, relwidth= .5)
-
 #Create a fucntion for the save button
 def save_file():
     reponse = tkMessageBox.showerror('Error', "There are no rules to save")
