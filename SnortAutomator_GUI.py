@@ -2,7 +2,10 @@
 import tkinter as tk
 from tkinter import Button, Label, OptionMenu, Place, StringVar, Toplevel, filedialog
 from tkinter import font
+from tkinter.constants import GROOVE, SUNKEN
 import tkinter.messagebox as tkMessageBox
+from typing import Text
+import SnortAutomator_backend as sab
 
 #Set variables for the characteristics of GUI interface
 Height = 500
@@ -32,11 +35,15 @@ def live_capture_options():
 def baseline_options():
     top = Toplevel()
     top.title('Baseline')
-    top.geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-    pop_frame = tk.Frame(top,)
-    pop_frame.pack()
-    instrc = tk.Label(pop_frame, text='Enter the IP address that are vaild on your network')
-    instrc.place(relx = .05, rely= .1, relheight=.04, relwidth= .5)
+    top.geometry("%dx%d%+d%+d" % (350, 250, 250, 125))
+    instrc = tk.Label(top, text='Enter the IP address that are vaild on your network')
+    instrc.pack()
+    entry = tk.Text(top,relief=GROOVE,borderwidth=2)
+    entry.place(relx=0.2, rely=0.1, relwidth= .5, relheight=.71)
+    start_button = tk.Button(top, text='Create Snort Rules')
+    start_button.place(relx= .25, rely= .8, relwidth= .4, relheight=.09, command=lambda:sab.compare_traffic(entry.get()))
+    exit_button = tk.Button(top, text='Exit Program', command=top.destroy)
+    exit_button.place(relx= .3, rely= .9, relheight= .09 , relwidth=.3)
 #Create a fucntion for the save button
 def save_file():
     reponse = tkMessageBox.showerror('Error', "There are no rules to save")
