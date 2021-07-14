@@ -1,13 +1,12 @@
 #Import Statements
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import Button, Label, OptionMenu, Place, StringVar, Toplevel, filedialog
 from tkinter import font
 import tkinter.messagebox as tkMessageBox
 
 #Set variables for the characteristics of GUI interface
 Height = 500
 Width = 500
-
 #Test Function
 def hello_world():
     tkMessageBox.showinfo('Hello World', 'Hello World')
@@ -16,8 +15,30 @@ def upload_pcap():
     pcap = filedialog.askopenfile(initialdir="/", title='Select File',filetypes = (("All","*.pcap *.pcapng"),("pcap files","*.pcap"),("pcapng files","*.pcapng")))
     label = tk.Label(lower_frame, text='Upload Complete' + str(pcap),anchor='nw', justify='left', bd=4)
     label.place(relwidth=1, relheight=1)
+#Create a function to allow the user to get options for the live capture
+def live_capture_options():
+    interface_options = StringVar()
+    interface_options.set('Interface options')
+    top = Toplevel()
+    top.title("Interface Options")
+    top.geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
+    drop_menu = OptionMenu(top, interface_options,"option_1", "option_2")
+    drop_menu.pack(pady=20)
+    exit_button = Button(top, text='Exit Program',command=top.destroy)
+    exit_button.pack()
+    global chosen_interface 
+    chosen_interface = interface_options.get()
+#Create a function for the create_rules button
+def baseline_options():
+    top = Toplevel()
+    top.title('Baseline')
+    top.geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
+    pop_frame = tk.Frame(top,)
+    pop_frame.pack()
+    instrc = tk.Label(pop_frame, text='Enter the IP address that are vaild on your network')
+    instrc.place(relx = .05, rely= .1, relheight=.04, relwidth= .5)
 
-#Create a fucntion for teh save button
+#Create a fucntion for the save button
 def save_file():
     reponse = tkMessageBox.showerror('Error', "There are no rules to save")
 #Create the root base for the GUI
@@ -47,11 +68,11 @@ upload_button = tk.Button(frame, text='Upload', command=lambda:upload_pcap())
 upload_button.place(relx=.05, relheight= .10, relwidth=.25)
 
 #Create a create rules button to be a to create rules
-create_rules_button = tk.Button(frame, text='Create Rules')
+create_rules_button = tk.Button(frame, text='Create Rules',command=lambda:baseline_options())
 create_rules_button.place(relx= .38, relheight= .10 , relwidth=.25)
 
 #Create a live capture button to capture live traffic
-live_Capture_button = tk.Button(frame, text='Live Capture',)
+live_Capture_button = tk.Button(frame, text='Live Capture',command=lambda:live_capture_options())
 live_Capture_button.place(relx = .7, relheight= .10, relwidth=.25)
 
 #Create a save button to save rules
