@@ -1,8 +1,19 @@
+#!/usr/bin/env python3 
 #Import Statements
 import tkinter as tk
 from tkinter import Button, Label, OptionMenu, Place, StringVar, Toplevel, filedialog
 from tkinter import font
+from tkinter.constants import GROOVE, SUNKEN
 import tkinter.messagebox as tkMessageBox
+from typing import Text
+import pyshark as py
+import re
+src_dictionary = {}
+dst_dictionary = {}
+snort_rule_list = []
+pcap_file = ''
+interfaces = ['eth0', 'any', 'lo']
+seconds = [ 20 , 30 , 40 , 50 , 60]
 
 #Set variables for the characteristics of GUI interface
 Height = 500
@@ -12,18 +23,25 @@ def hello_world():
     tkMessageBox.showinfo('Hello World', 'Hello World')
 #Function to upload pcap file
 def upload_pcap():
-    pcap = filedialog.askopenfile(initialdir="/", title='Select File',filetypes = (("All","*.pcap *.pcapng"),("pcap files","*.pcap"),("pcapng files","*.pcapng")))
-    label = tk.Label(lower_frame, text='Upload Complete' + str(pcap),anchor='nw', justify='left', bd=4)
+    pcap_file = filedialog.askopenfilename(initialdir="/", title='Select File',filetypes = (("All","*.pcap *.pcapng"),("pcap files","*.pcap"),("pcapng files","*.pcapng")))
+    pcap_capture(pcap_file)
+    label = tk.Label(lower_frame, text='Upload Complete',anchor='nw', justify='left', bd=4)
     label.place(relwidth=1, relheight=1)
 #Create a function to allow the user to get options for the live capture
 def live_capture_options():
+    timeout_options = StringVar()
+    timeout_options.set('Timeout options in seconds')
     interface_options = StringVar()
     interface_options.set('Interface options')
     top = Toplevel()
     top.title("Interface Options")
     top.geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-    drop_menu = OptionMenu(top, interface_options,"option_1", "option_2")
-    drop_menu.pack(pady=20)
+    drop_menu = OptionMenu(top, interface_options,*interfaces)
+    drop_menu.pack(pady=5)
+    drop_menu_1 = OptionMenu(top, timeout_options, *seconds )
+    drop_menu_1.pack(pady=10)
+    activate_button = Button(top, text='Start Live Capture', command=lambda:live_capture(timeout_options.get(),interface_options.get()))
+    activate_button.pack()
     exit_button = Button(top, text='Exit Program',command=top.destroy)
     exit_button.pack()
     global chosen_interface 
@@ -32,14 +50,86 @@ def live_capture_options():
 def baseline_options():
     top = Toplevel()
     top.title('Baseline')
-    top.geometry("%dx%d%+d%+d" % (300, 200, 250, 125))
-    pop_frame = tk.Frame(top,)
-    pop_frame.pack()
-    instrc = tk.Label(pop_frame, text='Enter the IP address that are vaild on your network')
-    instrc.place(relx = .05, rely= .1, relheight=.04, relwidth= .5)
+    top.geometry("%dx%d%+d%+d" % (350, 250, 250, 125))
+    instrc = tk.Label(top, text='Enter the IP address that are vaild on your network')
+    instrc.pack()
+    entry = tk.Text(top,relief=GROOVE,borderwidth=2)
+    entry.place(relx=0.2, rely=0.1, relwidth= .5, relheight=.71)
+    start_button = tk.Button(top, text='Create Snort Rules',command= lambda:compare_traffic(entry.get('1.0', 'end')))
+    start_button.place(relx= .25, rely= .8, relwidth= .4, relheight=.09)
+    exit_button = tk.Button(top, text='Exit Program',command=top.destroy)
+    exit_button.place(relx= .3, rely= .9, relheight= .09 , relwidth=.3)
 #Create a fucntion for the save button
 def save_file():
     reponse = tkMessageBox.showerror('Error', "There are no rules to save")
+
+def errors(error_number):
+    if error_number == 0:
+        response = tkMessageBox.showerror('Error','You entered the IP addresses wrong!')
+    elif error_number == 1 :
+        response = tkMessageBox.showerror('Error', 'You didn\'t upload a pcap file!')
+    elif error_number == 2:
+        response = tkMessageBox.showerror('Error', 'You have already uploaded a pcap file!')
+    elif error_number == 3:
+        response = tkMessageBox.showerror('Error', 'You have no traffic to check')
+def pcap_capture(pcap):
+    if pcap != '':
+        cap = py.FileCapture(pcap)
+        for pack in cap:
+            try:
+                ip_src = pack.ip.src
+                ip_dst = pack.ip.dst
+                src_port = pack.tcp.srcport
+                dst_port = pack.tcp.dstport
+            except:
+                arp_traffic = pack
+            src_dictionary[ip_src] = src_port
+            dst_dictionary[ip_dst] = dst_port
+    else:
+        errors(1)
+def live_capture(timeout_n,interface_c):
+    print('He')
+    if not src_dictionary and not dst_dictionary:
+        capture = py.LiveCapture(interface=interface_c)
+        capture.sniff(timeout=int(timeout_n))
+        for pack in capture.sniff_continuously(packet_count=10):
+            try:
+                ip_src = pack.ip.src
+                ip_dst = pack.ip.dst
+                src_port = pack.tcp.srcport
+                dst_port = pack.tcp.dstport
+            except:
+                arp_traffic = pack
+            src_dictionary[ip_src] = src_port
+            dst_dictionary[ip_dst] = dst_port
+    else:
+        errors(2)
+def compare_traffic(whitelist_ip):
+    if src_dictionary and dst_dictionary:
+        src_dictionary_list = list(src_dictionary.keys())
+        dst_dictionnary_list = list(dst_dictionary.keys())
+        regex_ip = re.compile('([0-9]{1,3}\.){3}[0-9]{1,3}')
+        whitelist_match = regex_ip.match(whitelist_ip)
+        if whitelist_match:
+            for idx, ip in enumerate(src_dictionary.keys()):
+                if ip not in whitelist_ip:
+                    snort_rule = 'alert tcp {bad_src_ip} {bad_src_port} -> {bad_dst_ip} {bad_dst_port}'
+                    snort_rule_list.append(snort_rule.format(bad_src_ip=ip,bad_src_port=src_dictionary[ip],bad_dst_ip=dst_dictionnary_list[idx],bad_dst_port=dst_dictionary[dst_dictionnary_list[idx]]))
+            rule_generator(snort_rule_list)
+        else:
+            errors(0)
+    else:
+        errors(3)
+def rule_generator(rules):
+    sid = 1000000
+    output = ''
+    for widget in lower_frame.winfo_children():
+        widget.destroy()
+    for snort_rules in rules:
+        sid += 1
+        output += snort_rules + '\n'
+    label_rules = tk.Label(lower_frame, text=f'Snort Rulez\n{output}(msg:\'IP address may be malicious attacker\', {sid})' ,anchor='nw', justify='left', bd=4, font= 5)
+    label_rules.place(relheight=1,relwidth=1)
 #Create the root base for the GUI
 root = tk.Tk()
 
