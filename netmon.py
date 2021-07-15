@@ -59,4 +59,6 @@ for ipsrc in unip:
             print (f"Consider applying the following firewall rule: <ufw deny from {ipsrc}>")
             print ("----------------------------------------------------------------------------------")
             print ("\n\n\n")
+        else:
+            print (f"No port scan detected on your network from {ipsrc}...")
 
