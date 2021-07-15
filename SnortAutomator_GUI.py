@@ -68,8 +68,10 @@ def errors(error_number):
         response = tkMessageBox.showerror('Error','You entered the IP addresses wrong!')
     elif error_number == 1 :
         response = tkMessageBox.showerror('Error', 'You didn\'t upload a pcap file!')
-    elif error_number == 3:
+    elif error_number == 2:
         response = tkMessageBox.showerror('Error', 'You have already uploaded a pcap file!')
+    elif error_number == 3:
+        response = tkMessageBox.showerror('Error', 'You have no traffic to check')
 def pcap_capture(pcap):
     if pcap != '':
         cap = py.FileCapture(pcap)
@@ -100,21 +102,23 @@ def live_capture(timeout_n,interface_c):
             src_dictionary[ip_src] = src_port
             dst_dictionary[ip_dst] = dst_port
     else:
-        errors(3)
+        errors(2)
 def compare_traffic(whitelist_ip):
-    src_dictionary_list = list(src_dictionary.keys())
-    dst_dictionnary_list = list(dst_dictionary.keys())
-    regex_ip = re.compile('([0-9]{1,3}\.){3}[0-9]{1,3}')
-    whitelist_match = regex_ip.match(whitelist_ip)
-    if whitelist_match:
-        for idx, ip in enumerate(src_dictionary.keys()):
-            if ip not in whitelist_ip:
-                snort_rule = 'alert tcp {bad_src_ip} {bad_src_port} -> {bad_dst_ip} {bad_dst_port}'
-                snort_rule_list.append(snort_rule.format(bad_src_ip=ip,bad_src_port=src_dictionary[ip],bad_dst_ip=dst_dictionnary_list[idx],bad_dst_port=dst_dictionary[dst_dictionnary_list[idx]]))
-        rule_generator(snort_rule_list)
+    if src_dictionary and dst_dictionary:
+        src_dictionary_list = list(src_dictionary.keys())
+        dst_dictionnary_list = list(dst_dictionary.keys())
+        regex_ip = re.compile('([0-9]{1,3}\.){3}[0-9]{1,3}')
+        whitelist_match = regex_ip.match(whitelist_ip)
+        if whitelist_match:
+            for idx, ip in enumerate(src_dictionary.keys()):
+                if ip not in whitelist_ip:
+                    snort_rule = 'alert tcp {bad_src_ip} {bad_src_port} -> {bad_dst_ip} {bad_dst_port}'
+                    snort_rule_list.append(snort_rule.format(bad_src_ip=ip,bad_src_port=src_dictionary[ip],bad_dst_ip=dst_dictionnary_list[idx],bad_dst_port=dst_dictionary[dst_dictionnary_list[idx]]))
+            rule_generator(snort_rule_list)
+        else:
+            errors(0)
     else:
-        errors(0)
-
+        errors(3)
 def rule_generator(rules):
     output = ''
     for widget in lower_frame.winfo_children():
