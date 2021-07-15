@@ -88,10 +88,11 @@ def pcap_capture(pcap):
     else:
         errors(1)
 def live_capture(timeout_n,interface_c):
+    print('He')
     if not src_dictionary and not dst_dictionary:
         capture = py.LiveCapture(interface=interface_c)
-        capture.sniff(timeout=timeout_n)
-        for pack in capture:
+        capture.sniff(timeout=int(timeout_n))
+        for pack in capture.sniff_continuously(packet_count=10):
             try:
                 ip_src = pack.ip.src
                 ip_dst = pack.ip.dst
@@ -120,13 +121,14 @@ def compare_traffic(whitelist_ip):
     else:
         errors(3)
 def rule_generator(rules):
+    sid = 1000000
     output = ''
     for widget in lower_frame.winfo_children():
         widget.destroy()
-    print('Here, are your rules')
     for snort_rules in rules:
+        sid += 1
         output += snort_rules + '\n'
-    label_rules = tk.Label(lower_frame, text=f'Snort Rulez\n{output}',anchor='nw', justify='left', bd=4)
+    label_rules = tk.Label(lower_frame, text=f'Snort Rulez\n{output}(msg:\'IP address may be malicious attacker\', {sid})' ,anchor='nw', justify='left', bd=4, font= 5)
     label_rules.place(relheight=1,relwidth=1)
 #Create the root base for the GUI
 root = tk.Tk()
