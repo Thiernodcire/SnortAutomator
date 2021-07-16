@@ -11,8 +11,8 @@ with open('traffic.csv', 'w', newline='') as file:
         try:
             writer.writerow([count, pack.ip.src , pack.tcp.srcport , pack.ip.dst , pack.tcp.dstport , pack.sniff_time , pack.sniff_timestamp , pack.tcp.flags] )
                 #print("------------------------------------")     
-                #print (pack.ip.src)
-                #print (pack.ip.dst)
+            print (pack.ip.src)
+            print (pack.ip.dst)
                 #print (pack.tcp.srcport)
                 #print (pack.tcp.dstport)
                 #print (pack.sniff_timestamp)
@@ -60,5 +60,5 @@ for ipsrc in unip:
             print ("----------------------------------------------------------------------------------")
             print ("\n\n\n")
         else:
-            print (f"No port scan detected on your network from {ipsrc}...")
+            print (f"No sign of active automated port scan detected on your network from {ipsrc}")
 
