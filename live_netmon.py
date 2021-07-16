@@ -58,5 +58,5 @@ for ipsrc in unip:
             print ("----------------------------------------------------------------------------------")
             print ("\n\n\n")
         else:
-            print (f"No port scan detected on your network from {ipsrc}...")
+            print (f"No sign of active automated port scan detected on your network from {ipsrc}")
 
