@@ -3,39 +3,37 @@ import pyshark
 import csv
 import pandas
 count=0
-cap = pyshark.FileCapture('/Users/tharwatkaasem/Documents/Imrsv/FP/nmap-scan.pcap')
-with open('traffic.csv', 'w', newline='') as file:
+cap2 = pyshark.LiveCapture(interface='bridge100')
+cap2.sniff(timeout=5)
+with open('Live_traffic.csv', 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["SN","ipsrc", "portsrc", "ipdst", "portdst", "snifftime", "timestamp", "flag"])
-    for pack in cap:
+    for pack in cap2.sniff_continuously(packet_count=500):
         try:
             writer.writerow([count, pack.ip.src , pack.tcp.srcport , pack.ip.dst , pack.tcp.dstport , pack.sniff_time , pack.sniff_timestamp , pack.tcp.flags] )
-                #print("------------------------------------")     
+            print("------------------------------------")     
             print (pack.ip.src)
             print (pack.ip.dst)
-                #print (pack.tcp.srcport)
-                #print (pack.tcp.dstport)
-                #print (pack.sniff_timestamp)
-                #print (pack.sniff_time)
-                #print (pack.tcp.flags)
-
-#               print (pack.udp.srcport)
-#               print (pack.udp.dstport)
-                #print("------------------------------------")
+            print (pack.tcp.srcport)
+            print (pack.tcp.dstport)
+            print (pack.sniff_timestamp)
+            print (pack.sniff_time)
+            print (pack.tcp.flags)
+            print("------------------------------------")
 
         except:
-             print("NONE TCP/UDP")
-
+            print("NONE TCP/UDP")
+        
         count= count+1
 
-#print ("-------------------------------------------")
-#print ("-------------------------------------------")
-#print ("-------------------------------------------")
+print ("-------------------------------------------")
+print ("-------------------------------------------")
+print ("-------------------------------------------")
 #Create white list of IP's
 whitelist = open("IP_whitelist", "r")
 wl=whitelist.read()
 #Check for unique IP's in traffic
-uip= pandas.read_csv("traffic.csv") 
+uip= pandas.read_csv("Live_traffic.csv") 
 unip=uip.ipsrc.unique()
 unport=uip.portdst.unique()
 #count number of packets for each uniqe ipsrc
