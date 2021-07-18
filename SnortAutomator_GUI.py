@@ -10,6 +10,8 @@ import tkinter.messagebox as tkMessageBox
 from typing import Text
 import pyshark as py
 import re
+import csv
+import pandas
 src_dictionary = {}
 dst_dictionary = {}
 snort_rule_list = []
@@ -148,6 +150,57 @@ def rule_generator(rules):
     label_rules.config(background='#201D1C',foreground='white')
     label_rules.place(relheight=1,relwidth=1)
     file_rules.set(output)
+def nmap_detector(pcap, whitelist):
+    count=0
+    cap = pyshark.FileCapture(pcap)
+    with open('traffic.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["SN","ipsrc", "portsrc", "ipdst", "portdst", "snifftime", "timestamp", "flag"])
+        for pack in cap:
+            try:
+                writer.writerow([count, pack.ip.src , pack.tcp.srcport , pack.ip.dst , pack.tcp.dstport , pack.sniff_time , pack.sniff_timestamp , pack.tcp.flags])
+                print (pack.ip.src)
+                print (pack.ip.dst)
+            except:
+                 print("NONE TCP/UDP")
+            count= count+1
+    uip= pandas.read_csv("traffic.csv") 
+    unip=uip.ipsrc.unique()
+    unport=uip.portdst.unique()
+    #count number of packets for each uniqe ipsrc
+    ipuncount=uip['ipsrc'].value_counts().reset_index(name='portdst')
+    portcount=uip['portdst'].value_counts()
+    flags= uip['flag'].unique()
+    for ipsrc in unip:
+        if ipsrc not in whitelist:
+            #print (ipsrc)
+            syn_flag= uip[(uip.ipsrc == ipsrc) & (uip.flag == '0x00000002')]
+            num_scanned_ports= len(syn_flag)
+            #print (num_scanned_ports) 
+            if len(syn_flag) >= 100:
+                statment = "\n\n\n" + "----------------------------------------------------------------------------------" + f"{ipsrc} scanned {num_scanned_ports} ports on your network... This is a high indicator of active Nmap scan\n" + f"Consider applying the following firewall rule: <ufw deny from {ipsrc}>" + "----------------------------------------------------------------------------------" + "\n\n\n"
+                label_nmap = tk.Label(lower_frame, text=f'{statment}', anchor='nw', justify='left', bd=4, font= ('Arial', 10))
+                label_nmap.config(background='#201D1C',foreground='white')
+                label_nmap.place(relheight=1,relwidth=1)
+            else:
+                statment_2 =  (f"No sign of active automated port scan detected on your network from {ipsrc}")
+                label_nmap = tk.Label(lower_frame, text=f'{statment_2}', anchor='nw', justify='left', bd=4, font= ('Arial', 10))
+                label_nmap.config(background='#201D1C',foreground='white')
+                label_nmap.place(relheight=1,relwidth=1)
+def whitelist_nmap():
+    top = Toplevel()
+    top.title('Baseline')
+    top.geometry("%dx%d%+d%+d" % (350, 250, 250, 125))
+    instrc = tk.Label(top, text='Enter the IP address that are vaild on your network', font=('Sans', 9))
+    instrc.pack()
+    entry = tk.Text(top,relief=GROOVE,borderwidth=2)
+    entry.config(background='#201D1C',foreground='white')
+    entry.place(relx=0.2, rely=0.1, relwidth= .5, relheight=.71)
+    start_button = tk.Button(top, text='Detect Nmap Scan',command= lambda:nmap_detector(pcap_file,entry.get('1.0', 'end')),font=('Sans', 9))
+    start_button.place(relx= .25, rely= .8, relwidth= .4, relheight=.09)
+    exit_button = tk.Button(top, text='Exit Program',command=top.destroy, font=('Sans', 9))
+    exit_button.place(relx= .3, rely= .9, relheight= .09 , relwidth=.3)
+    
 #Create the root base for the GUI
 root = tk.Tk()
 file_rules = StringVar()
@@ -199,7 +252,7 @@ exit_program_button = tk.Button(frame, text= 'Exit Program', command=exit)
 exit_program_button.place(relx= .38, rely = .91 , relheight= .08, relwidth= .20)
 
 #Create a button that detects nmap scans
-nmap_button = tk.Button(frame, text='Nmap Detector',)
+nmap_button = tk.Button(frame, text='Nmap Detector',command=lambda:whitelist_nmap())
 nmap_button.place(relx=.05, rely = .91 , relheight= .08, relwidth= .24)
 
 
