@@ -1,0 +1,22 @@
+alert tcp 192.168.1.2 55488 -> 192.168.1.30 22
+(msg:'IP address may be malicious attacker', 1000001 )
+alert tcp 192.168.1.30 22 -> 192.168.1.2 54419
+(msg:'IP address may be malicious attacker', 1000002 )
+alert tcp 192.168.1.10 1221 -> 192.168.1.10 443
+(msg:'IP address may be malicious attacker', 1000003 )
+alert tcp 192.168.1.157 1273 -> 192.168.1.255 80
+(msg:'IP address may be malicious attacker', 1000004 )
+alert tcp 192.168.1.158 51128 -> 192.168.1.157 80
+(msg:'IP address may be malicious attacker', 1000005 )
+alert tcp 64.12.24.50 443 -> 64.12.24.50 443
+(msg:'IP address may be malicious attacker', 1000006 )
+alert tcp 64.12.25.91 443 -> 192.168.1.158 51128
+(msg:'IP address may be malicious attacker', 1000007 )
+alert tcp 192.168.1.159 1273 -> 192.168.1.159 1273
+(msg:'IP address may be malicious attacker', 1000008 )
+alert tcp 205.188.13.12 443 -> 64.12.25.91 443
+(msg:'IP address may be malicious attacker', 1000009 )
+alert tcp 10.1.1.20 443 -> 205.188.13.12 443
+(msg:'IP address may be malicious attacker', 1000010 )
+alert tcp 64.236.68.246 80 -> 239.255.255.250 443
+(msg:'IP address may be malicious attacker', 1000011 )
