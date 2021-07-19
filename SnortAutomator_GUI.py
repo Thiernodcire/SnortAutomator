@@ -15,7 +15,6 @@ import pandas
 src_dictionary = {}
 dst_dictionary = {}
 snort_rule_list = []
-pcap_file = ''
 interfaces = ['eth0', 'any', 'lo']
 seconds = [ 20 , 30 , 40 , 50 , 60]
 
@@ -28,6 +27,7 @@ def hello_world():
 #Function to upload pcap file
 def upload_pcap():
     pcap_file = filedialog.askopenfilename(initialdir="/", title='Select File',filetypes = (("All","*.pcap *.pcapng"),("pcap files","*.pcap"),("pcapng files","*.pcapng")))
+    stored_pcap.set(pcap_file)
     pcap_capture(pcap_file)
     label = tk.Label(lower_frame, text='Upload Complete',anchor='nw', justify='left', bd=4, font=('Sans', 9))
     label.config(background='#201D1C',foreground='white')
@@ -150,9 +150,10 @@ def rule_generator(rules):
     label_rules.config(background='#201D1C',foreground='white')
     label_rules.place(relheight=1,relwidth=1)
     file_rules.set(output)
-def nmap_detector(pcap, whitelist):
+def nmap_detector(pcap,whitelist):
+    print(pcap)
     count=0
-    cap = pyshark.FileCapture(pcap)
+    cap = py.FileCapture(pcap)
     with open('traffic.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["SN","ipsrc", "portsrc", "ipdst", "portdst", "snifftime", "timestamp", "flag"])
@@ -196,7 +197,7 @@ def whitelist_nmap():
     entry = tk.Text(top,relief=GROOVE,borderwidth=2)
     entry.config(background='#201D1C',foreground='white')
     entry.place(relx=0.2, rely=0.1, relwidth= .5, relheight=.71)
-    start_button = tk.Button(top, text='Detect Nmap Scan',command= lambda:nmap_detector(pcap_file,entry.get('1.0', 'end')),font=('Sans', 9))
+    start_button = tk.Button(top, text='Detect Nmap Scan',command= lambda:nmap_detector(stored_pcap.get(),entry.get('1.0', 'end')),font=('Sans', 9))
     start_button.place(relx= .25, rely= .8, relwidth= .4, relheight=.09)
     exit_button = tk.Button(top, text='Exit Program',command=top.destroy, font=('Sans', 9))
     exit_button.place(relx= .3, rely= .9, relheight= .09 , relwidth=.3)
@@ -204,7 +205,7 @@ def whitelist_nmap():
 #Create the root base for the GUI
 root = tk.Tk()
 file_rules = StringVar()
-
+stored_pcap = StringVar()
 #Set a specfic font size
 myFont= font.Font(family='Sans',size='30',weight='bold')
 #Create a canvas layer to place on top of the base
